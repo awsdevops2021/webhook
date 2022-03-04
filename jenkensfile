@@ -1,0 +1,50 @@
+pipeline
+{
+    agent any
+    stages
+    {
+       stage('ContinuousDownload') 
+       {
+           steps
+           {
+               git 'https://github.com/selenium-saikrishna/maven.git'
+           }
+       }
+        stage('ContinuousBuild') 
+        {
+            steps
+            {
+                sh 'mvn package'
+            }
+        }
+        stage('ContinuousDeployment') 
+        {
+            steps
+            {
+              deploy adapters: [tomcat9(credentialsId: 'fe2d4c35-7615-4313-a334-5ccd870f415e', path: '', url: 'http://10.0.0.108:8080')], contextPath: 'testapp', war: '**/*.war'   
+            }
+            
+        }
+        stage('ContinuousTesting') 
+        {
+            steps
+            {
+               git 'https://github.com/selenium-saikrishna/FunctionalTesting.git'
+               sh 'java -jar /var/lib/jenkins/workspace/DeclarativePipelinewithpostcondition/testing.jar'
+            }
+            
+        }
+    }
+    post
+    {
+        success
+        {
+            deploy adapters: [tomcat9(credentialsId: 'fe2d4c35-7615-4313-a334-5ccd870f415e', path: '', url: 'http://10.0.0.5:8080')], contextPath: 'prodapp', war: '**/*.war'
+        }
+        failure
+        {
+            mail bcc: '', body: 'jenkins has failed in CI of the pipeline ', cc: '', from: '', replyTo: '', subject: 'CI failed', to: 'enow@gmail.com'
+        }
+    }
+        
+}
