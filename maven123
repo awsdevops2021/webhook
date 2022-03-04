@@ -1,0 +1,100 @@
+pipeline
+{
+    agent any
+    stages
+    {
+       stage('ContinuousDownload') 
+       {
+           steps
+           {
+               script
+               {
+                   try
+                   {
+                       git 'https://github.com/selenium-saikrishna/maven.git'
+                   }
+                   catch(Exception e1)
+                   {
+                     mail bcc: '', body: 'jenkins unable to download the dev code from the github ', cc: '', from: '', replyTo: '', subject: 'CI failed', to: 'enow@gmail.com'
+                     exit(1)
+                   }
+               }
+           }
+       }
+        stage('ContinuousBuild') 
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        sh 'mvn package'
+                    }
+                    catch(Exception e2)
+                    {
+                         mail bcc: '', body: 'jenkins unable to build the downloaded code in to artifact ', cc: '', from: '', replyTo: '', subject: 'CI failed', to: 'enow@gmail.com'
+                         exit(1)
+                    }
+                }
+            }
+        }
+        stage('ContinuousDeployment') 
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        deploy adapters: [tomcat9(credentialsId: 'fe2d4c35-7615-4313-a334-5ccd870f415e', path: '', url: 'http://10.0.0.108:8080')], contextPath: 'testapp', war: '**/*.war'
+                    }
+                    catch(Exception e3)
+                    {
+                         mail bcc: '', body: 'jenkins unable to deploy the artifact into thr QAserver tomcat ', cc: '', from: '', replyTo: '', subject: 'CI failed', to: 'enow@gmail.com'
+                         exit(1)
+                    }
+                }
+            }
+            
+        }
+        stage('ContinuousTesting') 
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        git 'https://github.com/selenium-saikrishna/FunctionalTesting.git'
+                        sh 'java -jar /var/lib/jenkins/workspace/DeclarativePipelinewithpostcondition/testing.jar'
+                    }
+                    catch(Exception e4)
+                    {
+                         mail bcc: '', body: 'jenkins unable to download the selenium tool test program ', cc: '', from: '', replyTo: '', subject: 'CI failed', to: 'enow@gmail.com'
+                         exit(1)
+                    }
+                }
+            }
+            
+        }
+        stage('ContinuousDelivery')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        deploy adapters: [tomcat9(credentialsId: 'fe2d4c35-7615-4313-a334-5ccd870f415e', path: '', url: 'http://10.0.0.5:8080')], contextPath: 'prodapp', war: '**/*.war'
+                    }
+                    catch(Exception e5)
+                    {
+                        mail bcc: '', body: 'jenkins unable to deploy in to the prodserver tomcat ', cc: '', from: '', replyTo: '', subject: 'CI failed', to: 'enow@gmail.com'
+                        exit(1)
+                    }
+                }
+            }
+        }
+    }
+}
