@@ -43,7 +43,7 @@ pipeline
         }
         failure
         {
-            mail bcc: '', body: 'jenkins has failed in CI of the pipeline ', cc: '', from: '', replyTo: '', subject: 'CI failed', to: 'enow@gmail.com'
+            mail bcc: '', body: 'jenkins has failed in CI ', cc: '', from: '', replyTo: '', subject: 'CI failed', to: 'enow@gmail.com'
         }
     }
         
